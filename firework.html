@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <title>花火ゲーム</title>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #000;
+      overflow: hidden;
+      font-family: sans-serif;
+      user-select: none;
+    }
+
+    #ui {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    #shapeButtons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .shape-btn {
+      background: rgba(255,255,255,0.08);
+      border: 2px solid rgba(255,255,255,0.3);
+      color: #fff;
+      font-size: 13px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .shape-btn:hover { background: rgba(255,255,255,0.18); }
+
+    .shape-btn.selected {
+      background: rgba(255,200,50,0.25);
+      border-color: #FFD700;
+      color: #FFD700;
+    }
+
+    #igniteBtn {
+      background: #c0392b;
+      border: none;
+      color: #fff;
+      font-size: 15px;
+      font-weight: bold;
+      padding: 12px 32px;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 0 20px #e74c3c88;
+      transition: transform 0.1s, box-shadow 0.2s;
+      letter-spacing: 2px;
+    }
+
+    #igniteBtn:hover {
+      box-shadow: 0 0 32px #e74c3ccc;
+    }
+
+    #igniteBtn:active {
+      transform: scale(0.95);
+    }
+
+    #igniteBtn.lit {
+      background: #e67e22;
+      box-shadow: 0 0 32px #f39c12cc;
+      animation: flicker 0.15s infinite alternate;
+    }
+
+    @keyframes flicker {
+      from { box-shadow: 0 0 24px #f39c12aa; }
+      to   { box-shadow: 0 0 40px #f1c40fff; }
+    }
+
+    #hint {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.4);
+      font-size: 13px;
+      letter-spacing: 2px;
+      pointer-events: none;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.11.1/lib/p5.min.js"></script>
+</head>
+<body>
+
+<div id="hint">画面をタップ or クリックして打ち上げ場所を選ぼう</div>
+
+<div id="ui">
+  <div id="shapeButtons">
+    <button class="shape-btn selected" data-shape="normal">● ノーマル</button>
+    <button class="shape-btn" data-shape="heart">♥ ハート</button>
+    <button class="shape-btn" data-shape="star">★ 星形</button>
+    <button class="shape-btn" data-shape="smile">😊 スマイル</button>
+  </div>
+  <button id="igniteBtn">🔥 点火する</button>
+</div>
+
+<script>
+let particles = [];
+let rockets = [];
+let selectedShape = 'normal';
+let launchX = null;
+let isLit = false;
+
+// 形状ボタン
+document.querySelectorAll('.shape-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedShape = btn.dataset.shape;
+  });
+});
+
+// 点火ボタン
+const igniteBtn = document.getElementById('igniteBtn');
+igniteBtn.addEventListener('click', () => {
+  if (launchX === null) {
+    launchX = Math.random() * window.innerWidth * 0.6 + window.innerWidth * 0.2;
+  }
+  if (!isLit) {
+    isLit = true;
+    igniteBtn.classList.add('lit');
+    igniteBtn.textContent = '🔥 点火中...';
+    launchRocket(launchX, selectedShape);
+    setTimeout(() => {
+      isLit = false;
+      igniteBtn.classList.remove('lit');
+      igniteBtn.textContent = '🔥 点火する';
+      launchX = null;
+    }, 1200);
+  }
+});
+
+function getShapeOffsets(shape, count) {
+  const offsets = [];
+
+  if (shape === 'normal') {
+    for (let i = 0; i < count; i++) {
+      const a = (TWO_PI / count) * i;
+      offsets.push({ a, r: 1 });
+    }
+
+  } else if (shape === 'heart') {
+    for (let i = 0; i < count; i++) {
+      const t = (TWO_PI / count) * i;
+      const hx = 16 * pow(sin(t), 3);
+      const hy = -(13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t));
+      const mag = sqrt(hx*hx + hy*hy);
+      offsets.push({ a: atan2(hy, hx), r: mag / 16 });
+    }
+
+  } else if (shape === 'star') {
+    // 5芒星の外側・内側の頂点を交互に結んで辺上に点を配置
+    const outerR = 1.0;
+    const innerR = 0.38;
+    const points = 5;
+    const totalVerts = points * 2;
+    const segAngle = TWO_PI / totalVerts;
+
+    for (let i = 0; i < count; i++) {
+      const t = (TWO_PI / count) * i;
+      const seg = floor(t / segAngle);
+      const segT = (t - seg * segAngle) / segAngle;
+
+      const r0 = seg % 2 === 0 ? outerR : innerR;
+      const r1 = seg % 2 === 0 ? innerR : outerR;
+      const a0 = seg * segAngle - HALF_PI;
+      const a1 = (seg + 1) * segAngle - HALF_PI;
+
+      const px = r0 * cos(a0) * (1 - segT) + r1 * cos(a1) * segT;
+      const py = r0 * sin(a0) * (1 - segT) + r1 * sin(a1) * segT;
+      offsets.push({ a: atan2(py, px), r: sqrt(px*px + py*py) });
+    }
+
+  } else if (shape === 'smile') {
+    // 顔の輪郭
+    const faceCount = floor(count * 0.45);
+    for (let i = 0; i < faceCount; i++) {
+      const a = (TWO_PI / faceCount) * i;
+      offsets.push({ a, r: 1.0 });
+    }
+
+    // 左目
+    const eyeCount = floor(count * 0.1);
+    for (let i = 0; i < eyeCount; i++) {
+      const a = (TWO_PI / eyeCount) * i;
+      const ex = -0.35 + cos(a) * 0.13;
+      const ey = -0.28 + sin(a) * 0.13;
+      offsets.push({ a: atan2(ey, ex), r: sqrt(ex*ex + ey*ey) });
+    }
+
+    // 右目
+    for (let i = 0; i < eyeCount; i++) {
+      const a = (TWO_PI / eyeCount) * i;
+      const ex = 0.35 + cos(a) * 0.13;
+      const ey = -0.28 + sin(a) * 0.13;
+      offsets.push({ a: atan2(ey, ex), r: sqrt(ex*ex + ey*ey) });
+    }
+
+    // 口（笑顔の弧：下にカーブ）
+    const mouthCount = floor(count * 0.35);
+    for (let i = 0; i < mouthCount; i++) {
+      const t = i / (mouthCount - 1);
+      const a = lerp(PI * 0.82, PI * 0.18, t); // 148°→32°、90°（下）を通る
+      const mx = cos(a) * 0.48;
+      const my = sin(a) * 0.48;
+      offsets.push({ a: atan2(my, mx), r: sqrt(mx*mx + my*my) });
+    }
+  }
+
+  return offsets;
+}
+
+function launchRocket(targetX, shape) {
+  const burstY = random(height * 0.15, height * 0.5);
+  rockets.push({
+    x: targetX,
+    y: height,
+    targetY: burstY,
+    shape,
+    speed: (height - burstY) / 40,
+    trail: [],
+  });
+}
+
+function burst(x, y, shape) {
+  const count = 120;
+  const offsets = getShapeOffsets(shape, count);
+  const baseColor = [random(100,255), random(100,255), random(100,255)];
+  const speed = 5;
+
+  offsets.forEach(o => {
+    let vx, vy;
+    if (o.ox !== undefined) {
+      // スマイルの目・口
+      const cx = x + o.ox * speed * 12;
+      const cy = y + o.oy * speed * 12;
+      vx = cos(o.a) * o.sr * speed + (cx - x) / 12;
+      vy = sin(o.a) * o.sr * speed + (cy - y) / 12;
+    } else {
+      vx = cos(o.a) * o.r * speed;
+      vy = sin(o.a) * o.r * speed;
+    }
+
+    const c = [
+      constrain(baseColor[0] + random(-40,40), 0, 255),
+      constrain(baseColor[1] + random(-40,40), 0, 255),
+      constrain(baseColor[2] + random(-40,40), 0, 255),
+    ];
+
+    particles.push({ x, y, vx, vy, alpha: 255, color: c, size: random(3,7) });
+
+    // きらきら尾
+    if (random() < 0.3) {
+      particles.push({
+        x, y,
+        vx: vx * 0.5 + random(-1,1),
+        vy: vy * 0.5 + random(-1,1),
+        alpha: 180, color: [255,255,200], size: random(2,4)
+      });
+    }
+  });
+}
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  noStroke();
+}
+
+function draw() {
+  background(0, 40);
+
+  // ロケット
+  for (let i = rockets.length - 1; i >= 0; i--) {
+    const r = rockets[i];
+    r.trail.push({ x: r.x, y: r.y });
+    if (r.trail.length > 12) r.trail.shift();
+
+    r.y -= r.speed;
+
+    // 尾跡
+    r.trail.forEach((t, idx) => {
+      const a = map(idx, 0, r.trail.length, 0, 180);
+      fill(255, 180, 50, a);
+      ellipse(t.x + random(-1,1), t.y + random(-1,1), map(idx, 0, r.trail.length, 1, 5));
+    });
+
+    // ロケット本体
+    fill(255, 220, 80);
+    ellipse(r.x, r.y, 6, 10);
+
+    if (r.y <= r.targetY) {
+      burst(r.x, r.y, r.shape);
+      rockets.splice(i, 1);
+    }
+  }
+
+  // パーティクル
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    fill(...p.color, p.alpha);
+    ellipse(p.x, p.y, p.size);
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vx *= 0.97;
+    p.vy = p.vy * 0.97 + 0.08;
+    p.alpha -= 3.5;
+    if (p.alpha <= 0) particles.splice(i, 1);
+  }
+}
+
+// タップ/クリックで打ち上げ位置を指定
+function mousePressed() {
+  if (mouseY < height - 120) {
+    launchX = mouseX;
+    if (isLit) {
+      launchRocket(launchX, selectedShape);
+      launchX = null;
+    }
+  }
+}
+
+function touchStarted() {
+  if (touches.length > 0 && touches[0].y < height - 120) {
+    launchX = touches[0].x;
+    if (isLit) {
+      launchRocket(launchX, selectedShape);
+      launchX = null;
+    }
+  }
+  return false;
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+</script>
+
+</body>
+</html>

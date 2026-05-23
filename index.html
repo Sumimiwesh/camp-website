@@ -7,6 +7,21 @@
   <style>
     body {
       color: skyblue;
+      background: white;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .star {
+      position: fixed;
+      pointer-events: none;
+      z-index: 0;
+      line-height: 1;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
     }
   </style>
 </head>
@@ -18,9 +33,28 @@
     <ul>
       <li><a href="https://www.google.com/">Google</a></li>
       <li><a href="https://www.yahoo.co.jp/">Yahoo! JAPAN</a></li>
+      <li><a href="guessgame.html">数当てゲーム</a></li>
+      <li><a href="pokemon.html">Today's Pokemon</a></li>
+      <li><a href="star.html">星空</a></li>
+      <li><a href="firework.html">花火ゲーム</a></li>
     </ul>
     
     <img src="computer01_smile.png" alt="笑顔のコンピューター">
   </main>
+  <script>
+    const colors = ['#FFD700','#FF69B4','#87CEEB','#98FB98','#FFA500','#DA70D6','#FF6347','#40E0D0','#FF85C2','#B0E0E6'];
+    const symbols = ['★','☆','✦','✧','✩','✪'];
+    for (let i = 0; i < 60; i++) {
+      const el = document.createElement('span');
+      el.className = 'star';
+      el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+      el.style.left = Math.random() * 100 + 'vw';
+      el.style.top = Math.random() * 100 + 'vh';
+      el.style.fontSize = (Math.random() * 28 + 8) + 'px';
+      el.style.color = colors[Math.floor(Math.random() * colors.length)];
+      el.style.opacity = (Math.random() * 0.6 + 0.3).toFixed(2);
+      document.body.appendChild(el);
+    }
+  </script>
 </body>
 </html>

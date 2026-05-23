@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <title>星空</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    #factBox {
+      position: fixed;
+      pointer-events: none;
+      background: rgba(10, 10, 40, 0.92);
+      border: 2px solid #FFD700;
+      color: #f0e8d0;
+      font-family: sans-serif;
+      font-size: 14px;
+      line-height: 1.8;
+      padding: 14px 18px;
+      border-radius: 10px;
+      max-width: 240px;
+      box-shadow: 0 0 16px #FFD70088;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 10;
+    }
+
+    #factBox.show {
+      opacity: 1;
+    }
+
+    #factBox .fact-title {
+      color: #FFD700;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.11.1/lib/p5.min.js"></script>
+</head>
+<body>
+
+<div id="factBox">
+  <div class="fact-title">⭐ 豆知識</div>
+  <div id="factText"></div>
+</div>
+
+<script>
+let stars = [];
+let particles = [];
+let factTimer = 0;
+
+const facts = [
+  '太陽は直径約139万kmで、地球の約109倍の大きさです。',
+  '夜空で最も明るい星は「シリウス」。地球から約8.6光年離れています。',
+  '星の色は温度を表しています。青白い星は約3万度、赤い星は約3000度です。',
+  '天の川銀河には約2000億〜4000億個の星があると言われています。',
+  '星は自分の重力で水素をヘリウムに変える核融合で輝いています。',
+  '北極星は地球の自転軸の延長線上にあるため、ほぼ動いて見えません。',
+  '太陽から最も近い恒星「プロキシマ・ケンタウリ」は約4.2光年先にあります。',
+  '星が「またたく」のは、大気の揺らぎで光が屈折するためです。',
+  '赤色巨星は寿命が近い星。太陽も約50億年後に赤色巨星になります。',
+  'ブラックホールは巨大な星が超新星爆発した後にできることがあります。',
+  '光が1年間に進む距離を「1光年」と言い、約9.5兆kmです。',
+  '星座は古代の人々が星を結んで作った想像上の模様です。現在88星座あります。',
+  'おりひめ星（ベガ）とひこ星（アルタイル）の距離は約16光年です。',
+  '超新星爆発は一時的に銀河全体と同じくらいの明るさで輝くことがあります。',
+  '金・銀などの重い元素は、星同士の衝突（中性子星合体）で作られます。',
+];
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  noStroke();
+
+  for (let i = 0; i < 120; i++) {
+    stars.push(makeStar(random(width), random(height)));
+  }
+}
+
+function makeStar(x, y) {
+  return {
+    x, y,
+    size: random(4, 24),
+    speed: random(0.2, 1.0),
+    driftX: random(-0.15, 0.15),
+    rotAngle: random(TWO_PI),
+    rotSpeed: random(-0.02, 0.02),
+    brightness: random(150, 255),
+    twinkleOffset: random(TWO_PI),
+  };
+}
+
+function draw() {
+  background(0, 0, 20);
+
+  // 星を描画
+  for (let s of stars) {
+    s.x += s.driftX;
+    s.y -= s.speed * 0.4;
+    s.rotAngle += s.rotSpeed;
+
+    if (s.y < -s.size * 2) { s.y = height + s.size; s.x = random(width); }
+    if (s.x < -s.size * 2) s.x = width + s.size;
+    if (s.x > width + s.size * 2) s.x = -s.size;
+
+    let twinkle = map(sin(frameCount * 0.05 + s.twinkleOffset), -1, 1, 0.5, 1.0);
+    let b = s.brightness * twinkle;
+    fill(b, b, min(b * 1.1, 255));
+
+    push();
+    translate(s.x, s.y);
+    rotate(s.rotAngle);
+    drawStarShape(0, 0, s.size);
+    pop();
+  }
+
+  // パーティクル描画
+  for (let i = particles.length - 1; i >= 0; i--) {
+    let p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.15;
+    p.life -= 3;
+    p.size *= 0.96;
+
+    fill(p.r, p.g, p.b, p.life);
+    push();
+    translate(p.x, p.y);
+    rotate(p.angle);
+    drawStarShape(0, 0, p.size);
+    pop();
+
+    if (p.life <= 0 || p.size < 0.5) particles.splice(i, 1);
+  }
+
+  if (factTimer > 0) factTimer--;
+  if (factTimer === 0 && factTimer !== -1) hideFact();
+}
+
+function drawStarShape(x, y, size) {
+  let angle = -PI / 2;
+  let step = TWO_PI / 5;
+  beginShape();
+  for (let i = 0; i < 5; i++) {
+    vertex(x + cos(angle + step * i) * size,
+           y + sin(angle + step * i) * size);
+    vertex(x + cos(angle + step * i + step / 2) * (size / 2.5),
+           y + sin(angle + step * i + step / 2) * (size / 2.5));
+  }
+  endShape(CLOSE);
+}
+
+function mousePressed() {
+  checkStarHit(mouseX, mouseY);
+}
+
+function touchStarted() {
+  if (touches.length > 0) {
+    checkStarHit(touches[0].x, touches[0].y);
+  }
+  return false;
+}
+
+function checkStarHit(mx, my) {
+  for (let i = stars.length - 1; i >= 0; i--) {
+    let s = stars[i];
+    let d = dist(mx, my, s.x, s.y);
+    if (d < s.size * 1.5) {
+      burst(s.x, s.y, s.size);
+      stars.splice(i, 1);
+      stars.push(makeStar(random(width), height + 20));
+      showFact(mx, my);
+      break;
+    }
+  }
+}
+
+function burst(x, y, size) {
+  const colors = [
+    [255, 215, 0], [255, 180, 50], [255, 255, 180],
+    [200, 220, 255], [255, 120, 180], [150, 240, 255],
+  ];
+  for (let i = 0; i < 28; i++) {
+    let c = colors[Math.floor(Math.random() * colors.length)];
+    let angle = random(TWO_PI);
+    let speed = random(2, 8);
+    particles.push({
+      x, y,
+      vx: cos(angle) * speed,
+      vy: sin(angle) * speed - random(2, 5),
+      size: random(size * 0.3, size * 0.9),
+      angle: random(TWO_PI),
+      r: c[0], g: c[1], b: c[2],
+      life: 255,
+    });
+  }
+}
+
+function showFact(x, y) {
+  const box = document.getElementById('factBox');
+  const text = document.getElementById('factText');
+  const fact = facts[Math.floor(Math.random() * facts.length)];
+  text.textContent = fact;
+
+  let bx = x + 16;
+  let by = y - 20;
+  if (bx + 260 > window.innerWidth) bx = x - 260;
+  if (by < 0) by = y + 20;
+
+  box.style.left = bx + 'px';
+  box.style.top = by + 'px';
+  box.classList.add('show');
+  factTimer = 180;
+}
+
+function hideFact() {
+  document.getElementById('factBox').classList.remove('show');
+  factTimer = -1;
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+</script>
+
+</body>
+</html>

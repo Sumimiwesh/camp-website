@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <title>訪問カウンター</title>
+  <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #1a1a1a;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, #2a2a2a 39px, #2a2a2a 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, #2a2a2a 39px, #2a2a2a 40px);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Share Tech Mono', monospace;
+      color: #f0e0c0;
+    }
+
+    .board {
+      background: #2b1d0e;
+      border: 6px solid #8B6914;
+      border-radius: 8px;
+      box-shadow: 0 0 40px #8B691488, inset 0 0 20px #00000088;
+      padding: 40px 48px;
+      text-align: center;
+      max-width: 420px;
+      width: 90%;
+    }
+
+    .board-title {
+      font-size: 0.75em;
+      letter-spacing: 6px;
+      color: #c8a050;
+      text-shadow: 0 0 8px #c8a05088;
+      margin-bottom: 6px;
+    }
+
+    .welcome {
+      font-size: 1.6em;
+      color: #f5d080;
+      text-shadow: 0 0 12px #f5d08088;
+      letter-spacing: 4px;
+      margin-bottom: 28px;
+    }
+
+    .label {
+      font-size: 0.65em;
+      color: #a08040;
+      letter-spacing: 4px;
+      margin-bottom: 14px;
+    }
+
+    /* パタパタ時計 */
+    .flip-counter {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+
+    .flip-digit {
+      width: 52px;
+      height: 72px;
+      position: relative;
+      perspective: 300px;
+    }
+
+    /* 常に表示される静止カード（新しい数字） */
+    .digit-static {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #111;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.6em;
+      color: #f5d080;
+      text-shadow: 0 0 10px #f5d08066;
+      border: 1px solid #2a2a2a;
+      z-index: 1;
+    }
+
+    /* 中央の仕切り線 */
+    .digit-divider {
+      position: absolute;
+      top: 50%;
+      width: 100%;
+      height: 2px;
+      background: #000;
+      z-index: 3;
+      transform: translateY(-50%);
+    }
+
+    /* 上半分だけを覆うフラップ（古い数字を表示） */
+    .digit-flap {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      height: 50%;
+      overflow: hidden;
+      background: #111;
+      border-radius: 6px 6px 0 0;
+      transform-origin: bottom center;
+      z-index: 2;
+    }
+
+    .digit-flap .flap-num {
+      font-size: 2.6em;
+      color: #f5d080;
+      text-shadow: 0 0 10px #f5d08066;
+      text-align: center;
+      line-height: 72px;
+      height: 72px;
+    }
+
+    .digit-flap.animate {
+      animation: flapDown 0.35s ease-in forwards;
+    }
+
+    @keyframes flapDown {
+      from { transform: rotateX(0deg); }
+      to   { transform: rotateX(-90deg); }
+    }
+
+    .message {
+      font-size: 0.65em;
+      color: #c8a050;
+      letter-spacing: 3px;
+      line-height: 2;
+      min-height: 2em;
+    }
+
+    .divider {
+      border: none;
+      border-top: 2px solid #8B6914;
+      margin: 20px 0;
+      opacity: 0.5;
+    }
+
+    .footer {
+      font-size: 0.45em;
+      color: #7a5a20;
+      letter-spacing: 3px;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="board">
+  <div class="board-title">★ WELCOME ★</div>
+  <div class="welcome">ようこそ！</div>
+
+  <div class="label">あなたの訪問回数</div>
+
+  <div class="flip-counter" id="flipCounter"></div>
+
+  <hr class="divider">
+  <div class="message" id="visitMessage"></div>
+  <div class="footer">-- VISITOR COUNTER --</div>
+</div>
+
+<script>
+  let visits = parseInt(localStorage.getItem('visits')) || 0;
+  visits += 1;
+  localStorage.setItem('visits', visits);
+
+  const msg = document.getElementById('visitMessage');
+  msg.textContent = visits === 1
+    ? '初めての訪問ありがとうございます！'
+    : `${visits} 回目のご訪問です！`;
+
+  // 桁数に応じてゼロ埋め（最低3桁）
+  const digits = String(visits).padStart(Math.max(3, String(visits).length), '0').split('');
+
+  const container = document.getElementById('flipCounter');
+
+  function makeFlipDigit(prevChar, nextChar) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'flip-digit';
+    // 静止カードは新しい数字、フラップは古い数字
+    wrapper.innerHTML = `
+      <div class="digit-static">${nextChar}</div>
+      <div class="digit-divider"></div>
+      <div class="digit-flap">
+        <div class="flap-num">${prevChar}</div>
+      </div>
+    `;
+    return wrapper;
+  }
+
+  const prevDigits = String(Math.max(visits - 1, 0))
+    .padStart(digits.length, '0').split('');
+
+  digits.forEach((d, i) => {
+    const el = makeFlipDigit(prevDigits[i], d);
+    container.appendChild(el);
+  });
+
+  // フラップをパタンと倒す
+  setTimeout(() => {
+    document.querySelectorAll('.digit-flap').forEach((el, i) => {
+      setTimeout(() => {
+        el.classList.add('animate');
+      }, i * 150);
+    });
+  }, 400);
+</script>
+</body>
+</html>

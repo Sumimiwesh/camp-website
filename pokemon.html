@@ -13,25 +13,24 @@
 
     body {
       background-color: #1a0a2e;
-      background-image:
-        radial-gradient(circle, #2a1a3e 1px, transparent 1px);
+      background-image: radial-gradient(circle, #2a1a3e 1px, transparent 1px);
       background-size: 24px 24px;
       color: #f0e8d0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
       margin: 0;
       padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
     }
 
-    .card {
+    .panel {
       background: #0d0d1a;
       border: 4px solid #F5A200;
       box-shadow: 6px 6px 0px #7a5100, 0 0 24px #F5A20044;
-      padding: 32px 28px;
-      max-width: 460px;
+      padding: 28px 24px;
       width: 100%;
+      max-width: 540px;
       text-align: center;
     }
 
@@ -41,6 +40,14 @@
       margin: 0 0 8px;
       line-height: 2;
       text-shadow: 3px 3px 0px #7a5100;
+      letter-spacing: 2px;
+    }
+
+    h2 {
+      color: #F5A200;
+      font-size: 0.6em;
+      margin: 0 0 16px;
+      text-shadow: 2px 2px 0px #7a5100;
       letter-spacing: 2px;
     }
 
@@ -116,11 +123,61 @@
       box-shadow: inset 2px 2px 0px #000;
     }
 
+    .record-btn {
+      margin-top: 20px;
+      background: #F5A200;
+      color: #1a0a2e;
+      border: none;
+      padding: 12px 20px;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.45em;
+      cursor: pointer;
+      box-shadow: 4px 4px 0px #7a5100;
+      letter-spacing: 1px;
+    }
+
+    .record-btn:hover {
+      background: #ffc040;
+    }
+
+    .record-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px #7a5100;
+    }
+
+    .record-btn:disabled {
+      background: #555;
+      color: #888;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .record-msg {
+      font-size: 0.3em;
+      color: #2ed573;
+      margin-top: 10px;
+      min-height: 1.5em;
+    }
+
     .loading {
       font-size: 0.45em;
       color: #F5A200;
       animation: blink 1s step-end infinite;
       margin: 32px 0;
+    }
+
+    .selecting {
+      font-size: 0.4em;
+      color: #F5A200;
+      margin: 32px 0 8px;
+      line-height: 2.5;
+    }
+
+    .selecting-dots {
+      font-size: 0.45em;
+      color: #F5A200;
+      margin-bottom: 32px;
+      animation: blink 0.8s step-end infinite;
     }
 
     .error {
@@ -130,6 +187,96 @@
       margin: 24px 0;
     }
 
+    /* カレンダー */
+    .cal-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .cal-nav-btn {
+      background: none;
+      border: 3px solid #F5A200;
+      color: #F5A200;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.5em;
+      padding: 6px 12px;
+      cursor: pointer;
+      box-shadow: 3px 3px 0px #7a5100;
+    }
+
+    .cal-nav-btn:hover { background: #F5A20022; }
+
+    .cal-month {
+      font-size: 0.45em;
+      color: #F5A200;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .cal-header {
+      font-size: 0.28em;
+      color: #888;
+      text-align: center;
+      padding: 4px 0;
+    }
+
+    .cal-cell {
+      aspect-ratio: 1;
+      border: 2px solid #222;
+      background: #0a0a14;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      min-height: 48px;
+    }
+
+    .cal-cell.today {
+      border-color: #F5A200;
+    }
+
+    .cal-cell.empty {
+      background: transparent;
+      border-color: transparent;
+    }
+
+    .cal-day {
+      font-size: 0.28em;
+      color: #888;
+      position: absolute;
+      top: 3px;
+      left: 5px;
+    }
+
+    .cal-cell.today .cal-day {
+      color: #F5A200;
+    }
+
+    .cal-sprite {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      width: 80%;
+      height: 80%;
+      object-fit: contain;
+      margin-top: 8px;
+    }
+
+    .cal-cell-name {
+      font-size: 0.2em;
+      color: #d0c8b0;
+      text-align: center;
+      line-height: 1.6;
+      padding: 0 2px;
+      word-break: break-all;
+    }
+
     @keyframes blink {
       0%, 100% { opacity: 1; }
       50% { opacity: 0; }
@@ -137,14 +284,30 @@
   </style>
 </head>
 <body>
-  <div class="card">
+
+  <canvas id="confettiCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;"></canvas>
+
+  <!-- Today's Pokemon -->
+  <div class="panel">
     <div class="stars">★ ★ ★</div>
     <h1>TODAY'S<br>POKEMON</h1>
     <div class="date-display" id="dateDisplay"></div>
     <hr class="pixel-divider">
     <div id="pokemonContent">
-      <p class="loading">NOW LOADING...</p>
+      <p class="selecting">Selecting Your<br>Pokemon</p>
+      <p class="selecting-dots">▼ ▼ ▼</p>
     </div>
+  </div>
+
+  <!-- カレンダー -->
+  <div class="panel">
+    <h2>★ POKEMON CALENDAR ★</h2>
+    <div class="cal-nav">
+      <button class="cal-nav-btn" id="prevMonth">＜</button>
+      <div class="cal-month" id="calMonthLabel"></div>
+      <button class="cal-nav-btn" id="nextMonth">＞</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
   </div>
 
   <script>
@@ -157,8 +320,9 @@
     };
 
     const today = new Date();
-    const dateDisplay = document.querySelector('#dateDisplay');
-    dateDisplay.textContent =
+    const todayKey = formatDateKey(today);
+
+    document.querySelector('#dateDisplay').textContent =
       today.getFullYear() + '.' +
       String(today.getMonth() + 1).padStart(2, '0') + '.' +
       String(today.getDate()).padStart(2, '0');
@@ -166,8 +330,31 @@
     const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
     const pokemonId = (dayOfYear % 151) + 1;
 
+    function formatDateKey(d) {
+      return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+    }
+
+    function loadRecords() {
+      return JSON.parse(localStorage.getItem('pokemonCalendar') || '{}');
+    }
+
+    function saveRecord(key, data) {
+      const records = loadRecords();
+      records[key] = data;
+      localStorage.setItem('pokemonCalendar', JSON.stringify(records));
+    }
+
     async function fetchPokemon() {
       try {
+        await new Promise(r => setTimeout(r, 2000));
+
+        document.querySelector('#pokemonContent').innerHTML =
+          '<p class="loading">NOW LOADING...</p>';
+
+        await new Promise(r => setTimeout(r, 800));
+
         const [pokeRes, speciesRes] = await Promise.all([
           fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonId}`),
           fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokemonId}`)
@@ -190,6 +377,8 @@
         const types = data.types.map(t => typeNames[t.type.name] || t.type.name);
         const sprite = data.sprites.front_default;
 
+        const alreadyRecorded = !!loadRecords()[todayKey];
+
         document.querySelector('#pokemonContent').innerHTML = `
           <img class="pokemon-sprite" src="${sprite}" alt="${name}">
           <p class="pokemon-number">No. ${String(pokemonId).padStart(3, '0')}</p>
@@ -198,10 +387,155 @@
             ${types.map(t => `<span class="type-badge">${t}</span>`).join('')}
           </div>
           <div class="pokemon-description">${description}</div>
+          <button class="record-btn" id="recordBtn" ${alreadyRecorded ? 'disabled' : ''}>
+            ${alreadyRecorded ? '★ RECORDED ★' : '► RECORD'}
+          </button>
+          <p class="record-msg" id="recordMsg">${alreadyRecorded ? 'すでに記録済みです' : ''}</p>
         `;
+
+        // ポケモン登場時にスプライト位置からコンフェティを発射
+        const spriteEl = document.querySelector('.pokemon-sprite');
+        spriteEl.addEventListener('load', () => {
+          const rect = spriteEl.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          launchConfettiFrom(cx, cy);
+        });
+
+        document.querySelector('#recordBtn').addEventListener('click', () => {
+          saveRecord(todayKey, { name, sprite, id: pokemonId });
+          document.querySelector('#recordBtn').disabled = true;
+          document.querySelector('#recordBtn').textContent = '★ RECORDED ★';
+          document.querySelector('#recordMsg').textContent = '記録しました！';
+          renderCalendar();
+        });
+
+        renderCalendar();
+
       } catch (e) {
         document.querySelector('#pokemonContent').innerHTML =
           '<p class="error">ERROR...<br><br>データを<br>よみこめませんでした</p>';
+      }
+    }
+
+    // カレンダー描画
+    let calYear = today.getFullYear();
+    let calMonth = today.getMonth();
+
+    function renderCalendar() {
+      const records = loadRecords();
+      const label = document.querySelector('#calMonthLabel');
+      label.textContent = calYear + '.' + String(calMonth + 1).padStart(2, '0');
+
+      const grid = document.querySelector('#calGrid');
+      grid.innerHTML = '';
+
+      const headers = ['日', '月', '火', '水', '木', '金', '土'];
+      headers.forEach(h => {
+        const el = document.createElement('div');
+        el.className = 'cal-header';
+        el.textContent = h;
+        grid.appendChild(el);
+      });
+
+      const firstDay = new Date(calYear, calMonth, 1).getDay();
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'cal-cell empty';
+        grid.appendChild(empty);
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const key = calYear + '-' +
+          String(calMonth + 1).padStart(2, '0') + '-' +
+          String(d).padStart(2, '0');
+        const isToday = key === todayKey;
+        const record = records[key];
+
+        const cell = document.createElement('div');
+        cell.className = 'cal-cell' + (isToday ? ' today' : '');
+
+        const dayLabel = document.createElement('div');
+        dayLabel.className = 'cal-day';
+        dayLabel.textContent = d;
+        cell.appendChild(dayLabel);
+
+        if (record) {
+          const img = document.createElement('img');
+          img.className = 'cal-sprite';
+          img.src = record.sprite;
+          img.alt = record.name;
+          img.title = record.name;
+          cell.appendChild(img);
+        }
+
+        grid.appendChild(cell);
+      }
+    }
+
+    document.querySelector('#prevMonth').addEventListener('click', () => {
+      calMonth--;
+      if (calMonth < 0) { calMonth = 11; calYear--; }
+      renderCalendar();
+    });
+
+    document.querySelector('#nextMonth').addEventListener('click', () => {
+      calMonth++;
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      renderCalendar();
+    });
+
+    // コンフェティ
+    const canvas = document.querySelector('#confettiCanvas');
+    const ctx = canvas.getContext('2d');
+    let pieces = [];
+    let animId = null;
+    const confettiColors = ['#ff4757','#ffa502','#2ed573','#1e90ff','#ff6b81','#eccc68','#a29bfe','#fd79a8','#F5A200','#ffffff'];
+
+    function launchConfettiFrom(cx, cy) {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      pieces = [];
+      for (let i = 0; i < 120; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 8 + 3;
+        pieces.push({
+          x: cx, y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - Math.random() * 4,
+          w: Math.random() * 10 + 4,
+          h: Math.random() * 6 + 3,
+          color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+          angle: Math.random() * 360,
+          spin: Math.random() * 6 - 3,
+          gravity: 0.3,
+        });
+      }
+      if (animId) cancelAnimationFrame(animId);
+      animateConfetti();
+    }
+
+    function animateConfetti() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pieces.forEach(p => {
+        p.vy += p.gravity;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.angle += p.spin;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle * Math.PI / 180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      });
+      pieces = pieces.filter(p => p.y < canvas.height + 20);
+      if (pieces.length > 0) {
+        animId = requestAnimationFrame(animateConfetti);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
     }
 
