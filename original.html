@@ -155,7 +155,7 @@
     /* ===== 作品 ===== */
     .works-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 16px;
     }
 
@@ -169,7 +169,10 @@
       color: inherit;
       border: 3px solid transparent;
       transition: transform 0.2s, box-shadow 0.2s;
-      display: block;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 160px;
     }
 
     .work-card:hover {
@@ -208,31 +211,91 @@
       font-weight: 700;
     }
 
-    /* ===== ポートフォリオカード ===== */
-    .portfolio-wrapper {
+    /* ===== 動的ポートフォリオカード ===== */
+    .work-card-wrapper {
       position: relative;
     }
 
-    .gear-btn {
+    .work-card-delete {
       position: absolute;
-      top: -10px;
-      right: -10px;
-      width: 32px;
-      height: 32px;
+      top: -8px;
+      right: -8px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
-      background: skyblue;
+      background: #ff6b6b;
       border: none;
+      color: #fff;
+      font-size: 12px;
       cursor: pointer;
-      font-size: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       z-index: 2;
-      transition: transform 0.3s;
+      line-height: 1;
     }
 
-    .gear-btn:hover { transform: rotate(60deg); }
+    .work-card-edit {
+      position: absolute;
+      top: -8px;
+      left: -8px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--mint);
+      border: none;
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      z-index: 2;
+      line-height: 1;
+    }
+
+    .work-card-wrapper,
+    .work-card-add {
+      min-height: 160px;
+    }
+
+    .work-card-wrapper {
+      position: relative;
+    }
+
+    .work-card-wrapper .work-card {
+      height: 100%;
+    }
+
+    .work-card-add {
+      background: #fff;
+      border-radius: 20px;
+      padding: 22px 18px;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+      border: 3px dashed #ccc;
+      cursor: pointer;
+      color: #bbb;
+      font-size: 2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .work-card-add:hover {
+      border-color: skyblue;
+      color: skyblue;
+    }
+
+    .work-card-add span {
+      font-size: 0.4em;
+      font-weight: 900;
+    }
 
     /* モーダル */
     .modal-overlay {
@@ -252,9 +315,8 @@
       border-radius: 20px;
       padding: 28px 24px;
       width: 90%;
-      max-width: 360px;
+      max-width: 380px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-      text-align: center;
     }
 
     .modal-box h3 {
@@ -262,9 +324,22 @@
       font-weight: 900;
       margin-bottom: 16px;
       color: #333;
+      text-align: center;
     }
 
-    .modal-box input {
+    .modal-field {
+      margin-bottom: 12px;
+    }
+
+    .modal-field label {
+      font-size: 0.75em;
+      font-weight: 700;
+      color: #888;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .modal-field input {
       width: 100%;
       border: 2px solid skyblue;
       border-radius: 10px;
@@ -272,13 +347,13 @@
       font-size: 0.85em;
       font-family: 'Nunito', sans-serif;
       outline: none;
-      margin-bottom: 16px;
     }
 
     .modal-buttons {
       display: flex;
       gap: 10px;
       justify-content: center;
+      margin-top: 16px;
     }
 
     .modal-save {
@@ -411,23 +486,34 @@
         <p>パタパタ時計風のレトロな訪問回数カウンター</p>
         <span class="work-tag">HTML / CSS</span>
       </a>
-      <div class="portfolio-wrapper">
-        <a class="work-card" id="portfolioCard" href="https://gemini.google.com/share/2d15d4772d92" target="_blank" style="border-color: skyblue;">
-          <div class="work-icon">🌸</div>
-          <h3>Gemini アプリ</h3>
-          <p>Geminiで作ったオリジナルアプリを見てみよう！</p>
-          <span class="work-tag">Gemini</span>
-        </a>
-        <button class="gear-btn" id="gearBtn" title="URLを設定">⚙️</button>
+      <div id="dynamicCards" style="display:contents;"></div>
+      <div class="work-card-add" id="addCardBtn">
+        ＋
+        <span>作品を追加</span>
       </div>
     </div>
   </section>
 
-  <!-- URLモーダル -->
+  <!-- モーダル -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal-box">
-      <h3>⚙️ アプリのURLを設定</h3>
-      <input type="url" id="urlInput" placeholder="https://...">
+      <h3 id="modalTitle">✏️ 作品を追加</h3>
+      <div class="modal-field">
+        <label>絵文字アイコン</label>
+        <input type="text" id="iconInput" placeholder="🌸" maxlength="2">
+      </div>
+      <div class="modal-field">
+        <label>タイトル</label>
+        <input type="text" id="nameInput" placeholder="例：天気予報アプリ">
+      </div>
+      <div class="modal-field">
+        <label>説明</label>
+        <input type="text" id="descInput" placeholder="例：Geminiで作ったアプリ">
+      </div>
+      <div class="modal-field">
+        <label>URL</label>
+        <input type="url" id="urlInput" placeholder="https://...">
+      </div>
       <div class="modal-buttons">
         <button class="modal-save" id="modalSave">保存</button>
         <button class="modal-cancel" id="modalCancel">キャンセル</button>
@@ -442,21 +528,103 @@
   </footer>
 
   <script>
-    const STORAGE_KEY = 'portfolioUrl';
-    const card = document.getElementById('portfolioCard');
-    const gearBtn = document.getElementById('gearBtn');
+    const STORAGE_KEY = 'portfolioWorks';
     const overlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const iconInput = document.getElementById('iconInput');
+    const nameInput = document.getElementById('nameInput');
+    const descInput = document.getElementById('descInput');
     const urlInput = document.getElementById('urlInput');
+    const dynamicCards = document.getElementById('dynamicCards');
 
-    // 保存済みURLがあれば反映
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) card.href = saved;
+    let editingIndex = null;
 
-    // 歯車ボタン
-    gearBtn.addEventListener('click', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      urlInput.value = card.href !== 'javascript:void(0)' ? card.href : '';
+    function loadWorks() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    }
+
+    function saveWorks(works) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(works));
+    }
+
+    const borderColors = ['skyblue', 'var(--pink)', 'var(--mint)', 'var(--purple)', 'var(--yellow)'];
+
+    function renderDynamicCards() {
+      const works = loadWorks();
+      dynamicCards.innerHTML = '';
+      works.forEach((w, i) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'work-card-wrapper';
+
+        const card = document.createElement('a');
+        card.className = 'work-card';
+        card.href = w.url;
+        card.target = '_blank';
+        card.style.borderColor = borderColors[i % borderColors.length];
+        card.innerHTML = `
+          <div class="work-icon">${w.icon || '🌸'}</div>
+          <h3>${w.name}</h3>
+          <p>${w.desc}</p>
+          <span class="work-tag">Gemini</span>
+        `;
+
+        // 編集ボタン
+        const editBtn = document.createElement('button');
+        editBtn.className = 'work-card-edit';
+        editBtn.textContent = '✎';
+        editBtn.title = '編集';
+        editBtn.addEventListener('click', e => {
+          e.preventDefault();
+          e.stopPropagation();
+          editingIndex = i;
+          modalTitle.textContent = '✏️ 作品を編集';
+          iconInput.value = w.icon || '';
+          nameInput.value = w.name || '';
+          descInput.value = w.desc || '';
+          urlInput.value = w.url || '';
+          overlay.classList.add('show');
+        });
+
+        // 削除ボタン
+        const delBtn = document.createElement('button');
+        delBtn.className = 'work-card-delete';
+        delBtn.textContent = '✕';
+        delBtn.title = '削除';
+        delBtn.addEventListener('click', e => {
+          e.preventDefault();
+          e.stopPropagation();
+          const works = loadWorks();
+          works.splice(i, 1);
+          saveWorks(works);
+          renderDynamicCards();
+        });
+
+        wrapper.appendChild(editBtn);
+        wrapper.appendChild(card);
+        wrapper.appendChild(delBtn);
+        dynamicCards.appendChild(wrapper);
+      });
+    }
+
+    // 初期データ
+    if (!localStorage.getItem(STORAGE_KEY)) {
+      saveWorks([{
+        icon: '🌸',
+        name: 'Gemini アプリ',
+        desc: 'Geminiで作ったオリジナルアプリ',
+        url: 'https://gemini.google.com/share/2d15d4772d92'
+      }]);
+    }
+    renderDynamicCards();
+
+    // 追加ボタン
+    document.getElementById('addCardBtn').addEventListener('click', () => {
+      editingIndex = null;
+      modalTitle.textContent = '✏️ 作品を追加';
+      iconInput.value = '';
+      nameInput.value = '';
+      descInput.value = '';
+      urlInput.value = '';
       overlay.classList.add('show');
     });
 
@@ -464,18 +632,28 @@
     document.getElementById('modalSave').addEventListener('click', () => {
       const url = urlInput.value.trim();
       if (url) {
-        card.href = url;
-        localStorage.setItem(STORAGE_KEY, url);
+        const works = loadWorks();
+        const entry = {
+          icon: iconInput.value.trim() || '🌸',
+          name: nameInput.value.trim() || '作品',
+          desc: descInput.value.trim() || '',
+          url,
+        };
+        if (editingIndex !== null) {
+          works[editingIndex] = entry;
+        } else {
+          works.push(entry);
+        }
+        saveWorks(works);
+        renderDynamicCards();
       }
       overlay.classList.remove('show');
     });
 
-    // キャンセル
     document.getElementById('modalCancel').addEventListener('click', () => {
       overlay.classList.remove('show');
     });
 
-    // オーバーレイ外クリックで閉じる
     overlay.addEventListener('click', e => {
       if (e.target === overlay) overlay.classList.remove('show');
     });
