@@ -1,211 +1,214 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <title>Today's Pokemon</title>
+  <title>数当てゲーム</title>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" >
   <style>
-    * {
-      font-family: 'Press Start 2P', monospace;
-      box-sizing: border-box;
+    :root {
+      --primary: #F5A200;
+      --primary-hover: #d48e00;
+      --primary-light: #fff4e0;
     }
 
     body {
-      background-color: #1a0a2e;
-      background-image:
-        radial-gradient(circle, #2a1a3e 1px, transparent 1px);
-      background-size: 24px 24px;
-      color: #f0e8d0;
+      background-color: var(--primary-light);
+      color: #3a2a00;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      margin: 0;
-      padding: 20px;
     }
 
-    .card {
-      background: #0d0d1a;
-      border: 4px solid #F5A200;
-      box-shadow: 6px 6px 0px #7a5100, 0 0 24px #F5A20044;
-      padding: 32px 28px;
-      max-width: 460px;
-      width: 100%;
+    main {
       text-align: center;
     }
 
     h1 {
-      color: #F5A200;
-      font-size: 0.85em;
-      margin: 0 0 8px;
-      line-height: 2;
-      text-shadow: 3px 3px 0px #7a5100;
-      letter-spacing: 2px;
+      color: var(--primary);
     }
 
-    .stars {
-      color: #F5A200;
-      font-size: 0.6em;
-      letter-spacing: 6px;
-      margin-bottom: 12px;
+    #guessGame {
+      margin: 20px 0;
     }
 
-    .date-display {
-      font-size: 0.35em;
-      color: #888;
-      margin-bottom: 16px;
-      letter-spacing: 2px;
-    }
-
-    .pixel-divider {
-      border: none;
-      border-top: 4px solid #F5A200;
-      margin: 16px 0;
-      box-shadow: 0 2px 0px #7a5100;
-    }
-
-    .pokemon-sprite {
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-      width: 160px;
-      height: 160px;
-      margin: 8px auto 4px;
-      display: block;
-      filter: drop-shadow(4px 4px 0px #F5A20066);
-    }
-
-    .pokemon-number {
-      font-size: 0.35em;
-      color: #888;
-      margin-bottom: 4px;
-    }
-
-    .pokemon-name {
-      color: #F5A200;
-      font-size: 1em;
-      margin: 8px 0 12px;
-      text-shadow: 2px 2px 0px #7a5100;
-    }
-
-    .pokemon-types {
-      display: flex;
+    #cards {
+      display: grid;
+      grid-template-columns: repeat(10, 56px);
+      gap: 12px;
+      margin-bottom: 20px;
       justify-content: center;
-      gap: 10px;
-      margin: 8px 0 16px;
     }
 
-    .type-badge {
-      font-size: 0.3em;
-      padding: 5px 10px;
-      border: 2px solid #F5A200;
-      color: #F5A200;
-      background: #1a0a2e;
-      box-shadow: 2px 2px 0px #7a5100;
+    .card {
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border: 2px solid var(--primary);
+      border-radius: 50%;
+      font-size: 1.3em;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s, color 0.15s, transform 0.1s;
     }
 
-    .pokemon-description {
-      font-size: 0.32em;
-      line-height: 2.5;
-      color: #d0c8b0;
-      border: 3px solid #333;
-      padding: 14px;
+    .card:hover {
+      background: var(--primary-light);
+      transform: scale(1.08);
+    }
+
+    .card.selected {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary-hover);
+    }
+
+    #guessSubmit {
+      background-color: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 24px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1em;
+    }
+
+    #guessSubmit:hover {
+      background-color: var(--primary-hover);
+    }
+
+    #guessSubmit:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    #guessResult {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: var(--primary);
       margin-top: 12px;
-      text-align: left;
-      background: #0a0a14;
-      box-shadow: inset 2px 2px 0px #000;
     }
 
-    .loading {
-      font-size: 0.45em;
-      color: #F5A200;
-      animation: blink 1s step-end infinite;
-      margin: 32px 0;
-    }
-
-    .error {
-      font-size: 0.35em;
-      color: #ff6b6b;
-      line-height: 2.5;
-      margin: 24px 0;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
+    #confettiCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999;
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="stars">★ ★ ★</div>
-    <h1>TODAY'S<br>POKEMON</h1>
-    <div class="date-display" id="dateDisplay"></div>
-    <hr class="pixel-divider">
-    <div id="pokemonContent">
-      <p class="loading">NOW LOADING...</p>
-    </div>
+
+<canvas id="confettiCanvas"></canvas>
+<main class="container">
+  <h1>数当てゲーム (1~20)</h1>
+
+  <div id="guessGame">
+    <div id="cards"></div>
+    <input type="submit" value="予想を入力" id="guessSubmit" disabled>
+    <p id="guessResult"></p>
   </div>
+</main>
 
-  <script>
-    const typeNames = {
-      normal: 'ノーマル', fire: 'ほのお', water: 'みず', electric: 'でんき',
-      grass: 'くさ', ice: 'こおり', fighting: 'かくとう', poison: 'どく',
-      ground: 'じめん', flying: 'ひこう', psychic: 'エスパー', bug: 'むし',
-      rock: 'いわ', ghost: 'ゴースト', dragon: 'ドラゴン', dark: 'あく',
-      steel: 'はがね', fairy: 'フェアリー'
-    };
+<script>
+  let answerNumber = Math.floor(Math.random() * 20) + 1;
+  console.log('正解は' + answerNumber);
 
-    const today = new Date();
-    const dateDisplay = document.querySelector('#dateDisplay');
-    dateDisplay.textContent =
-      today.getFullYear() + '.' +
-      String(today.getMonth() + 1).padStart(2, '0') + '.' +
-      String(today.getDate()).padStart(2, '0');
+  let selectedNumber = null;
 
-    const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000);
-    const pokemonId = (dayOfYear % 151) + 1;
+  const cardsContainer = document.querySelector('#cards');
+  for (let i = 1; i <= 20; i++) {
+    const card = document.createElement('div');
+    card.classList.add('card');
+    card.textContent = i;
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedNumber = i;
+      guessSubmit.disabled = false;
+    });
+    cardsContainer.appendChild(card);
+  }
 
-    async function fetchPokemon() {
-      try {
-        const [pokeRes, speciesRes] = await Promise.all([
-          fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonId}`),
-          fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokemonId}`)
-        ]);
-        const data = await pokeRes.json();
-        const speciesData = await speciesRes.json();
+  let guessSubmit = document.querySelector('#guessSubmit');
+  let guessResult = document.querySelector('#guessResult');
 
-        const jaName =
-          speciesData.names.find(n => n.language.name === 'ja-Hrkt') ||
-          speciesData.names.find(n => n.language.name === 'ja');
-        const name = jaName ? jaName.name : data.name.toUpperCase();
+  function checkGuess() {
+    if (selectedNumber === null) return;
 
-        const jaFlavor = speciesData.flavor_text_entries
-          .filter(e => e.language.name === 'ja')
-          .pop();
-        const description = jaFlavor
-          ? jaFlavor.flavor_text.replace(/\f|\n/g, ' ')
-          : '説明文がありません。';
+    if (selectedNumber === answerNumber) {
+      guessResult.textContent = '正解です！';
+      launchConfetti();
+    } else if (selectedNumber < answerNumber) {
+      guessResult.textContent = 'もっと大きいです';
+    } else {
+      guessResult.textContent = 'もっと小さいです';
+    }
+  }
 
-        const types = data.types.map(t => typeNames[t.type.name] || t.type.name);
-        const sprite = data.sprites.front_default;
+  // コンフェティアニメーション
+  const canvas = document.querySelector('#confettiCanvas');
+  const ctx = canvas.getContext('2d');
+  let confettiPieces = [];
+  let animationId = null;
 
-        document.querySelector('#pokemonContent').innerHTML = `
-          <img class="pokemon-sprite" src="${sprite}" alt="${name}">
-          <p class="pokemon-number">No. ${String(pokemonId).padStart(3, '0')}</p>
-          <p class="pokemon-name">${name}</p>
-          <div class="pokemon-types">
-            ${types.map(t => `<span class="type-badge">${t}</span>`).join('')}
-          </div>
-          <div class="pokemon-description">${description}</div>
-        `;
-      } catch (e) {
-        document.querySelector('#pokemonContent').innerHTML =
-          '<p class="error">ERROR...<br><br>データを<br>よみこめませんでした</p>';
-      }
+  const colors = ['#ff4757', '#ffa502', '#2ed573', '#1e90ff', '#ff6b81', '#eccc68', '#a29bfe', '#fd79a8'];
+
+  function launchConfetti() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    confettiPieces = [];
+
+    for (let i = 0; i < 150; i++) {
+      confettiPieces.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * -canvas.height,
+        w: Math.random() * 10 + 5,
+        h: Math.random() * 6 + 4,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        speed: Math.random() * 4 + 2,
+        angle: Math.random() * 360,
+        spin: Math.random() * 4 - 2,
+        drift: Math.random() * 2 - 1,
+      });
     }
 
-    fetchPokemon();
-  </script>
+    if (animationId) cancelAnimationFrame(animationId);
+    animateConfetti();
+  }
+
+  function animateConfetti() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    confettiPieces.forEach(p => {
+      p.y += p.speed;
+      p.x += p.drift;
+      p.angle += p.spin;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.angle * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+
+    confettiPieces = confettiPieces.filter(p => p.y < canvas.height);
+    if (confettiPieces.length > 0) {
+      animationId = requestAnimationFrame(animateConfetti);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  guessSubmit.addEventListener('click', checkGuess);
+</script>
+
 </body>
 </html>
