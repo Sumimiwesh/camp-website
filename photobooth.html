@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Photo Booth</title>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #fff;
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 30px 20px;
+      color: #222;
+    }
+
+    h1 {
+      font-family: 'Great Vibes', cursive;
+      font-size: 3.5rem;
+      color: #cc1111;
+      margin-bottom: 30px;
+      letter-spacing: 2px;
+    }
+
+    .app {
+      display: flex;
+      gap: 50px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    /* ===== カメラ側 ===== */
+    .camera-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* カメラ枠 */
+    .viewport-frame {
+      position: relative;
+      border: 2px solid #ccc;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #000;
+    }
+
+    #video {
+      display: block;
+      width: 360px;
+      height: 270px;
+      object-fit: cover;
+      transform: scaleX(-1);
+    }
+
+    /* カウントダウン overlay */
+    #countdown-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 6rem;
+      font-weight: bold;
+      color: white;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    #status {
+      font-size: 0.95rem;
+      color: #666;
+      height: 1.4em;
+      text-align: center;
+    }
+
+    /* 撮影ボタン */
+    #shoot-btn {
+      background: #cc1111;
+      color: white;
+      border: none;
+      padding: 12px 36px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    #shoot-btn:hover:not(:disabled) {
+      background: #aa0000;
+      transform: scale(1.03);
+    }
+
+    #shoot-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    /* 撮影枚数インジケーター */
+    .shot-indicators {
+      display: flex;
+      gap: 10px;
+    }
+
+    .shot-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid #ccc;
+      background: #fff;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .shot-dot.done {
+      background: #cc1111;
+      border-color: #cc1111;
+    }
+
+    /* ===== フィルム側 ===== */
+    .output-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .slot-label {
+      font-size: 0.8rem;
+      color: #999;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+
+    /* 排出口スリット */
+    .film-slot {
+      width: 170px;
+      height: 20px;
+      background: #222;
+      border-radius: 3px;
+      box-shadow: inset 0 3px 6px rgba(0,0,0,0.7);
+      border: 1.5px solid #555;
+      margin-bottom: -2px;
+    }
+
+    /* フィルム本体 */
+    #film-strip {
+      width: 160px;
+      background: #1a1a1a;
+      border: 2px solid #333;
+      border-radius: 3px;
+      padding: 10px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+
+      transform: translateY(-30px);
+      opacity: 0;
+      transition: transform 1s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.5s ease;
+    }
+
+    #film-strip.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* パーフォレーション付きフレーム */
+    .film-frame {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      margin: 3px 0;
+    }
+
+    .perfs {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 2px 0;
+    }
+
+    .perf {
+      width: 7px;
+      height: 9px;
+      background: #000;
+      border: 1px solid #555;
+      border-radius: 2px;
+    }
+
+    .film-photo {
+      flex: 1;
+      aspect-ratio: 4/3;
+      background: #2a2a2a;
+      border-radius: 1px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .film-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: contrast(1.05) saturate(0.9);
+    }
+
+    .film-photo.empty {
+      color: #444;
+      font-size: 1.2rem;
+    }
+
+    .film-edge {
+      height: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+    }
+
+    .film-edge .perf-h {
+      width: 9px;
+      height: 6px;
+      background: #000;
+      border: 1px solid #555;
+      border-radius: 2px;
+    }
+
+    /* 保存ボタン */
+    #download-btn {
+      display: none;
+      background: #fff;
+      color: #cc1111;
+      border: 2px solid #cc1111;
+      padding: 8px 24px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background 0.15s, color 0.15s;
+      margin-top: 6px;
+    }
+
+    #download-btn:hover {
+      background: #cc1111;
+      color: #fff;
+    }
+
+    /* フラッシュ */
+    #flash {
+      position: fixed;
+      inset: 0;
+      background: white;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+  <h1>Photo Booth</h1>
+
+  <div class="app">
+    <!-- カメラ側 -->
+    <div class="camera-section">
+      <div class="viewport-frame">
+        <video id="video" autoplay playsinline></video>
+        <div id="countdown-overlay"></div>
+      </div>
+
+      <div class="shot-indicators">
+        <div class="shot-dot" id="dot0"></div>
+        <div class="shot-dot" id="dot1"></div>
+        <div class="shot-dot" id="dot2"></div>
+        <div class="shot-dot" id="dot3"></div>
+      </div>
+
+      <div id="status">ボタンを押すと5秒後に撮影します</div>
+      <button id="shoot-btn">撮影する (1/4)</button>
+    </div>
+
+    <!-- フィルム側 -->
+    <div class="output-section">
+      <div class="slot-label">film</div>
+      <div class="film-slot"></div>
+
+      <div id="film-strip">
+        <div class="film-edge">
+          <div class="perf-h"></div><div class="perf-h"></div>
+          <div class="perf-h"></div><div class="perf-h"></div>
+          <div class="perf-h"></div><div class="perf-h"></div>
+        </div>
+
+        <div class="film-frame">
+          <div class="perfs"><div class="perf"></div><div class="perf"></div></div>
+          <div class="film-photo empty" id="fp0">○</div>
+          <div class="perfs"><div class="perf"></div><div class="perf"></div></div>
+        </div>
+        <div class="film-frame">
+          <div class="perfs"><div class="perf"></div><div class="perf"></div></div>
+          <div class="film-photo empty" id="fp1">○</div>
+          <div class="perfs"><div class="perf"></div><div class="perf"></div></div>
+        </div>
+        <div class="film-frame">
+          <div class="perfs"><div class="perf"></div><div class="perf"></div></div>
+          <div class="film-photo empty" id="fp2">○</div>
+          <div class="perfs"><div class="perf"></div><div class="perf"></div></div>
+        </div>
+        <div class="film-frame">
+          <div class="perfs"><div class="perf"></div><div class="perf"></div></div>
+          <div class="film-photo empty" id="fp3">○</div>
+          <div class="perfs"><div class="perf"></div><div class="perf"></div></div>
+        </div>
+
+        <div class="film-edge">
+          <div class="perf-h"></div><div class="perf-h"></div>
+          <div class="perf-h"></div><div class="perf-h"></div>
+          <div class="perf-h"></div><div class="perf-h"></div>
+        </div>
+      </div>
+
+      <button id="download-btn">保存する</button>
+    </div>
+  </div>
+
+  <div id="flash"></div>
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <script>
+    const video       = document.getElementById('video');
+    const canvas      = document.getElementById('canvas');
+    const shootBtn    = document.getElementById('shoot-btn');
+    const statusEl    = document.getElementById('status');
+    const cdOverlay   = document.getElementById('countdown-overlay');
+    const flashEl     = document.getElementById('flash');
+    const filmStrip   = document.getElementById('film-strip');
+    const downloadBtn = document.getElementById('download-btn');
+
+    const photos = [];
+    let shotCount = 0;
+    let counting  = false;
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        video.srcObject = stream;
+      } catch (e) {
+        statusEl.textContent = 'カメラを起動できませんでした';
+        shootBtn.disabled = true;
+      }
+    }
+    startCamera();
+
+    function countdown(secs) {
+      return new Promise(resolve => {
+        let n = secs;
+        cdOverlay.style.opacity = '1';
+        cdOverlay.textContent = n;
+        const iv = setInterval(() => {
+          n--;
+          if (n <= 0) {
+            clearInterval(iv);
+            cdOverlay.style.opacity = '0';
+            cdOverlay.textContent = '';
+            resolve();
+          } else {
+            cdOverlay.textContent = n;
+          }
+        }, 1000);
+      });
+    }
+
+    function triggerFlash() {
+      flashEl.style.transition = 'none';
+      flashEl.style.opacity = '0.9';
+      setTimeout(() => {
+        flashEl.style.transition = 'opacity 0.4s ease';
+        flashEl.style.opacity = '0';
+      }, 80);
+    }
+
+    function capturePhoto() {
+      canvas.width  = video.videoWidth  || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0);
+      return canvas.toDataURL('image/jpeg', 0.9);
+    }
+
+    function setFilmPhoto(idx, dataURL) {
+      const fp = document.getElementById('fp' + idx);
+      fp.classList.remove('empty');
+      fp.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = dataURL;
+      fp.appendChild(img);
+    }
+
+    function updateButton() {
+      if (shotCount < 4) {
+        shootBtn.textContent = `撮影する (${shotCount + 1}/4)`;
+        shootBtn.disabled = false;
+      } else {
+        shootBtn.textContent = 'もう一度はじめる';
+        shootBtn.disabled = false;
+      }
+    }
+
+    function resetAll() {
+      photos.length = 0;
+      shotCount = 0;
+      filmStrip.classList.remove('visible');
+      downloadBtn.style.display = 'none';
+      for (let i = 0; i < 4; i++) {
+        document.getElementById('dot' + i).classList.remove('done');
+        const fp = document.getElementById('fp' + i);
+        fp.classList.add('empty');
+        fp.innerHTML = '○';
+      }
+      statusEl.textContent = 'ボタンを押すと5秒後に撮影します';
+      updateButton();
+    }
+
+    shootBtn.addEventListener('click', async () => {
+      if (counting) return;
+
+      // 全部撮り終わった後はリセット
+      if (shotCount >= 4) {
+        resetAll();
+        return;
+      }
+
+      counting = true;
+      shootBtn.disabled = true;
+      const idx = shotCount;
+      statusEl.textContent = `${idx + 1} 枚目 — 5秒後に撮影します！`;
+
+      await countdown(5);
+
+      triggerFlash();
+      const dataURL = capturePhoto();
+      photos.push(dataURL);
+      setFilmPhoto(idx, dataURL);
+      document.getElementById('dot' + idx).classList.add('done');
+      shotCount++;
+
+      if (shotCount < 4) {
+        statusEl.textContent = `${shotCount} 枚撮れました！次はボタンを押してね`;
+        updateButton();
+      } else {
+        statusEl.textContent = 'フィルムが出てきます...';
+        await new Promise(r => setTimeout(r, 500));
+        filmStrip.classList.add('visible');
+        downloadBtn.style.display = 'inline-block';
+        statusEl.textContent = '完成！';
+        updateButton();
+      }
+
+      counting = false;
+    });
+
+    // ダウンロード
+    downloadBtn.addEventListener('click', async () => {
+      if (photos.length < 4) return;
+
+      const fw = 200, ph = 120, perf = 12, gap = 10, padV = 20;
+      const totalH = padV * 2 + ph * 4 + gap * 3;
+
+      const oc = document.createElement('canvas');
+      oc.width = fw; oc.height = totalH;
+      const ctx = oc.getContext('2d');
+
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fillRect(0, 0, fw, totalH);
+
+      function drawPerfs(x, startY, count) {
+        ctx.fillStyle = '#000'; ctx.strokeStyle = '#555'; ctx.lineWidth = 1.5;
+        for (let i = 0; i < count; i++) {
+          const hy = startY + i * 16;
+          ctx.beginPath(); ctx.roundRect(x, hy, 8, 10, 2); ctx.fill(); ctx.stroke();
+        }
+      }
+
+      const loadImg = url => new Promise((res, rej) => {
+        const img = new Image(); img.onload = () => res(img); img.onerror = rej; img.src = url;
+      });
+
+      for (let i = 0; i < 4; i++) {
+        const img = await loadImg(photos[i]);
+        const y = padV + i * (ph + gap);
+        const imgX = perf + 4, imgW = fw - (perf + 4) * 2;
+        ctx.drawImage(img, imgX, y, imgW, ph);
+        drawPerfs(4, y + 4, 2);
+        drawPerfs(fw - perf - 2, y + 4, 2);
+      }
+
+      const hCount = 6, hSp = fw / (hCount + 1);
+      [padV - 14, totalH - padV + 2].forEach(hy => {
+        for (let j = 0; j < hCount; j++) {
+          ctx.fillStyle = '#000'; ctx.strokeStyle = '#555'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.roundRect(hSp * (j + 1) - 5, hy, 10, 7, 2); ctx.fill(); ctx.stroke();
+        }
+      });
+
+      const a = document.createElement('a');
+      a.href = oc.toDataURL('image/png');
+      a.download = 'photobooth_film.png';
+      a.click();
+    });
+  </script>
+</body>
+</html>
