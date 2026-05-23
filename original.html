@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <title>My Portfolio</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pink:   #FF85C2;
+      --yellow: #FFD966;
+      --mint:   #7EDDCA;
+      --purple: #C9A6F5;
+      --blue:   #89C4FF;
+      --bg:     #FFF7FB;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: #333;
+      overflow-x: hidden;
+    }
+
+    /* ===== 星デコ ===== */
+    .deco-star {
+      position: fixed;
+      pointer-events: none;
+      z-index: 0;
+      font-size: 1.2em;
+      opacity: 0.5;
+      animation: twinkle 3s ease-in-out infinite alternate;
+    }
+    @keyframes twinkle {
+      from { opacity: 0.3; transform: scale(1); }
+      to   { opacity: 0.7; transform: scale(1.3); }
+    }
+
+    /* ===== ヘッダー ===== */
+    header {
+      position: relative;
+      z-index: 1;
+      background: linear-gradient(135deg, var(--pink) 0%, var(--purple) 50%, var(--blue) 100%);
+      padding: 60px 24px 80px;
+      text-align: center;
+      clip-path: ellipse(120% 100% at 50% 0%);
+    }
+
+    .avatar {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: #fff;
+      border: 5px solid #fff;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5em;
+    }
+
+    header h1 {
+      font-size: 2.2em;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 2px 3px 0px rgba(0,0,0,0.1);
+      letter-spacing: 2px;
+    }
+
+    header .tagline {
+      font-size: 1em;
+      color: rgba(255,255,255,0.9);
+      margin-top: 8px;
+      letter-spacing: 1px;
+    }
+
+    /* ===== セクション共通 ===== */
+    section {
+      position: relative;
+      z-index: 1;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    .section-title {
+      display: inline-block;
+      font-size: 1.3em;
+      font-weight: 900;
+      padding: 6px 20px;
+      border-radius: 30px;
+      color: #fff;
+      margin-bottom: 24px;
+      box-shadow: 3px 3px 0px rgba(0,0,0,0.1);
+    }
+
+    /* ===== About ===== */
+    .about-card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 4px 20px rgba(255,133,194,0.15);
+      border: 3px solid var(--pink);
+    }
+
+    .about-card p {
+      font-size: 1.05em;
+      line-height: 2;
+      color: #555;
+    }
+
+    /* ===== 趣味 ===== */
+    .hobbies {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: center;
+    }
+
+    .hobby-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 20px 24px;
+      text-align: center;
+      flex: 1;
+      min-width: 160px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+      border: 3px solid transparent;
+      transition: transform 0.2s;
+    }
+
+    .hobby-card:hover { transform: translateY(-4px); }
+    .hobby-card:nth-child(1) { border-color: var(--yellow); }
+    .hobby-card:nth-child(2) { border-color: var(--mint); }
+    .hobby-card:nth-child(3) { border-color: var(--purple); }
+
+    .hobby-icon { font-size: 2.6em; margin-bottom: 10px; }
+
+    .hobby-card h3 {
+      font-size: 1em;
+      font-weight: 900;
+      margin-bottom: 6px;
+      color: #333;
+    }
+
+    .hobby-card p {
+      font-size: 0.82em;
+      color: #777;
+      line-height: 1.7;
+    }
+
+    /* ===== 作品 ===== */
+    .works-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .work-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 22px 18px;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+      text-decoration: none;
+      color: inherit;
+      border: 3px solid transparent;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: block;
+    }
+
+    .work-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+
+    .work-card:nth-child(1) { border-color: var(--yellow); }
+    .work-card:nth-child(2) { border-color: var(--pink); }
+    .work-card:nth-child(3) { border-color: var(--mint); }
+    .work-card:nth-child(4) { border-color: var(--purple); }
+    .work-card:nth-child(5) { border-color: var(--blue); }
+
+    .work-icon { font-size: 2.4em; margin-bottom: 10px; }
+
+    .work-card h3 {
+      font-size: 0.95em;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+
+    .work-card p {
+      font-size: 0.78em;
+      color: #888;
+      line-height: 1.6;
+    }
+
+    .work-tag {
+      display: inline-block;
+      background: var(--bg);
+      border-radius: 10px;
+      font-size: 0.7em;
+      padding: 2px 10px;
+      margin-top: 8px;
+      color: #aaa;
+      font-weight: 700;
+    }
+
+    /* ===== ポートフォリオカード ===== */
+    .portfolio-wrapper {
+      position: relative;
+    }
+
+    .gear-btn {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: skyblue;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 2;
+      transition: transform 0.3s;
+    }
+
+    .gear-btn:hover { transform: rotate(60deg); }
+
+    /* モーダル */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal-box {
+      background: #fff;
+      border-radius: 20px;
+      padding: 28px 24px;
+      width: 90%;
+      max-width: 360px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    .modal-box h3 {
+      font-size: 1em;
+      font-weight: 900;
+      margin-bottom: 16px;
+      color: #333;
+    }
+
+    .modal-box input {
+      width: 100%;
+      border: 2px solid skyblue;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.85em;
+      font-family: 'Nunito', sans-serif;
+      outline: none;
+      margin-bottom: 16px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .modal-save {
+      background: skyblue;
+      border: none;
+      border-radius: 20px;
+      color: #fff;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 900;
+      padding: 8px 24px;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+
+    .modal-cancel {
+      background: #eee;
+      border: none;
+      border-radius: 20px;
+      color: #888;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 900;
+      padding: 8px 24px;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+
+    /* ===== フッター ===== */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 32px 24px 48px;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      color: rgba(255,255,255,0.9);
+      font-size: 0.85em;
+      margin-top: 20px;
+    }
+
+    footer .footer-emoji { font-size: 1.8em; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+
+  <!-- 星のデコ -->
+  <span class="deco-star" style="top:8%;left:5%;animation-delay:0s">⭐</span>
+  <span class="deco-star" style="top:15%;right:7%;animation-delay:0.5s">✨</span>
+  <span class="deco-star" style="top:40%;left:2%;animation-delay:1s">💫</span>
+  <span class="deco-star" style="top:60%;right:3%;animation-delay:1.5s">⭐</span>
+  <span class="deco-star" style="top:80%;left:6%;animation-delay:0.8s">✨</span>
+  <span class="deco-star" style="top:90%;right:8%;animation-delay:0.3s">💫</span>
+
+  <!-- ヘッダー -->
+  <header>
+    <div class="avatar">🐸</div>
+    <h1>Sumika</h1>
+    <p class="tagline">✨ Tech Girls Camp 2025 ✨</p>
+  </header>
+
+  <!-- About -->
+  <section>
+    <div class="section-title" style="background: linear-gradient(90deg, var(--pink), var(--purple));">
+      👋 About Me
+    </div>
+    <div class="about-card">
+      <p>
+        はじめまして！<strong>Sumika</strong> です。<br>
+        Tech Girls Camp でプログラミングを学んでいます。<br>
+        HTMLとJavaScriptを使って、いろんなページを作りました！
+      </p>
+    </div>
+  </section>
+
+  <!-- 趣味 -->
+  <section>
+    <div class="section-title" style="background: linear-gradient(90deg, var(--yellow), var(--mint));">
+      🎨 Hobbies
+    </div>
+    <div class="hobbies">
+      <div class="hobby-card">
+        <div class="hobby-icon">🦉</div>
+        <h3>Duolingo</h3>
+        <p>毎日コツコツ語学学習中！<br>連続記録を守るのが目標</p>
+      </div>
+      <div class="hobby-card">
+        <div class="hobby-icon">🌍</div>
+        <h3>国際交流</h3>
+        <p>いろんな国の人と<br>話すのが大好き！</p>
+      </div>
+      <div class="hobby-card">
+        <div class="hobby-icon">🤖</div>
+        <h3>Geminiをいじること</h3>
+        <p>Geminiを使ってオリジナルアプリを作成したり、画像生成をすることが好き。Google I/O 2026に参加しました！</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 作品 -->
+  <section>
+    <div class="section-title" style="background: linear-gradient(90deg, var(--blue), var(--mint));">
+      🛠️ My Works
+    </div>
+    <div class="works-grid">
+      <a class="work-card" href="guessgame.html">
+        <div class="work-icon">🎯</div>
+        <h3>数当てゲーム</h3>
+        <p>1〜20の数字を当てよう！カードをタッチして遊べる</p>
+        <span class="work-tag">HTML / JS</span>
+      </a>
+      <a class="work-card" href="pokemon.html">
+        <div class="work-icon">🐾</div>
+        <h3>Today's Pokemon</h3>
+        <p>今日のポケモンを毎日カレンダーに記録できる</p>
+        <span class="work-tag">API / 8bit</span>
+      </a>
+      <a class="work-card" href="star.html">
+        <div class="work-icon">🌟</div>
+        <h3>星空</h3>
+        <p>タッチすると星が弾けて豆知識を教えてくれる</p>
+        <span class="work-tag">p5.js</span>
+      </a>
+      <a class="work-card" href="firework.html">
+        <div class="work-icon">🎆</div>
+        <h3>花火ゲーム</h3>
+        <p>ハート・星・スマイルの花火を打ち上げよう</p>
+        <span class="work-tag">p5.js</span>
+      </a>
+      <a class="work-card" href="houmoncounter.html">
+        <div class="work-icon">🔢</div>
+        <h3>訪問カウンター</h3>
+        <p>パタパタ時計風のレトロな訪問回数カウンター</p>
+        <span class="work-tag">HTML / CSS</span>
+      </a>
+      <div class="portfolio-wrapper">
+        <a class="work-card" id="portfolioCard" href="https://gemini.google.com/share/2d15d4772d92" target="_blank" style="border-color: skyblue;">
+          <div class="work-icon">🌸</div>
+          <h3>Gemini アプリ</h3>
+          <p>Geminiで作ったオリジナルアプリを見てみよう！</p>
+          <span class="work-tag">Gemini</span>
+        </a>
+        <button class="gear-btn" id="gearBtn" title="URLを設定">⚙️</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- URLモーダル -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+      <h3>⚙️ アプリのURLを設定</h3>
+      <input type="url" id="urlInput" placeholder="https://...">
+      <div class="modal-buttons">
+        <button class="modal-save" id="modalSave">保存</button>
+        <button class="modal-cancel" id="modalCancel">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- フッター -->
+  <footer>
+    <div class="footer-emoji">💖</div>
+    <p>Made with love @ Tech Girls Camp 2025</p>
+  </footer>
+
+  <script>
+    const STORAGE_KEY = 'portfolioUrl';
+    const card = document.getElementById('portfolioCard');
+    const gearBtn = document.getElementById('gearBtn');
+    const overlay = document.getElementById('modalOverlay');
+    const urlInput = document.getElementById('urlInput');
+
+    // 保存済みURLがあれば反映
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) card.href = saved;
+
+    // 歯車ボタン
+    gearBtn.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      urlInput.value = card.href !== 'javascript:void(0)' ? card.href : '';
+      overlay.classList.add('show');
+    });
+
+    // 保存
+    document.getElementById('modalSave').addEventListener('click', () => {
+      const url = urlInput.value.trim();
+      if (url) {
+        card.href = url;
+        localStorage.setItem(STORAGE_KEY, url);
+      }
+      overlay.classList.remove('show');
+    });
+
+    // キャンセル
+    document.getElementById('modalCancel').addEventListener('click', () => {
+      overlay.classList.remove('show');
+    });
+
+    // オーバーレイ外クリックで閉じる
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) overlay.classList.remove('show');
+    });
+  </script>
+</body>
+</html>
